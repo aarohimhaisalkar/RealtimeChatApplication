@@ -444,18 +444,26 @@ function initEmojiPicker() {
     const emojiPicker = document.getElementById('emojiPicker');
     const messageInput = document.getElementById('messageInput');
     
-    if (!emojiBtn || !emojiPicker || !messageInput) return;
+    if (!emojiBtn || !emojiPicker || !messageInput) {
+        console.log('Emoji picker elements not found');
+        return;
+    }
     
     // Toggle emoji picker
-    emojiBtn.addEventListener('click', () => {
+    emojiBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const isVisible = emojiPicker.style.display !== 'none';
         emojiPicker.style.display = isVisible ? 'none' : 'block';
+        console.log('Emoji picker toggled:', !isVisible);
     });
     
     // Handle emoji selection
     const emojiButtons = emojiPicker.querySelectorAll('.emoji-btn');
     emojiButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const emoji = btn.textContent;
             const cursorPos = messageInput.selectionStart;
             const textBefore = messageInput.value.substring(0, cursorPos);
@@ -465,6 +473,7 @@ function initEmojiPicker() {
             messageInput.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
             emojiPicker.style.display = 'none';
             updateCharCount();
+            console.log('Emoji added:', emoji);
         });
     });
     
@@ -481,17 +490,25 @@ function initFileUpload() {
     const fileInput = document.getElementById('fileInput');
     const messageForm = document.getElementById('messageForm');
     
-    if (!fileBtn || !fileInput || !messageForm) return;
+    if (!fileBtn || !fileInput || !messageForm) {
+        console.log('File upload elements not found');
+        return;
+    }
     
-    fileBtn.addEventListener('click', () => {
+    fileBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('File button clicked');
         fileInput.click();
     });
     
     fileInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
+        console.log('Files selected:', files.length);
         if (files.length === 0) return;
         
         files.forEach(file => {
+            console.log('Uploading file:', file.name);
             uploadFile(file);
         });
         
@@ -516,15 +533,20 @@ async function uploadFile(file) {
             }
         });
         
+        console.log('Upload response status:', response.status);
+        
         if (response.ok) {
             const result = await response.json();
+            console.log('Upload result:', result);
             sendFileMessage(file.name, result.file_url, result.file_size);
         } else {
-            showError('Failed to upload file');
+            const error = await response.text();
+            console.error('Upload failed:', error);
+            showError('Failed to upload file: ' + error);
         }
     } catch (error) {
         console.error('File upload error:', error);
-        showError('File upload failed');
+        showError('File upload failed: ' + error.message);
     }
     
     hideUploadProgress();
@@ -549,14 +571,14 @@ function showUploadProgress(filename) {
     // Simulate progress
     let progress = 0;
     const progressInterval = setInterval(() => {
-        progress += Math.random() * 30;
+        progress += Math.random() * 20;
         if (progress > 90) progress = 90;
         
         const progressFill = document.querySelector('.progress-fill');
         if (progressFill) {
             progressFill.style.width = progress + '%';
         }
-    }, 200);
+    }, 300);
     
     // Store interval ID to clear later
     window.uploadProgressInterval = progressInterval;
@@ -571,6 +593,20 @@ function hideUploadProgress() {
     if (progressElement) {
         progressElement.remove();
     }
+}
+
+function showError(message) {
+    // Simple error display
+    const messagesContainer = document.getElementById('messagesContainer');
+    const errorHtml = `
+        <div class="message-wrapper message-other">
+            <div class="message-bubble" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
+                <div>❌ Error: ${message}</div>
+            </div>
+        </div>
+    `;
+    messagesContainer.insertAdjacentHTML('beforeend', errorHtml);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 function sendFileMessage(filename, fileUrl, fileSize) {

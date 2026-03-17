@@ -774,12 +774,13 @@ input {
     border: 1px solid rgba(71, 85, 105, 0.3);
     border-radius: 0.5rem;
     padding: 1rem;
-    margin-bottom: 0.5rem;
     position: absolute;
     bottom: 100%;
     left: 0;
     z-index: 1000;
     backdrop-filter: blur(10px);
+    min-width: 280px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
 .emoji-grid {
