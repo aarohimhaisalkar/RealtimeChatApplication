@@ -97,7 +97,7 @@ function initChat() {
         mobileToggle.addEventListener('click', () => {
             sidebar.classList.toggle('open');
         });
-
+        
         document.addEventListener('click', (e) => {
             if (window.innerWidth <= 768 && 
                 sidebar.classList.contains('open') && 
@@ -108,6 +108,10 @@ function initChat() {
             }
         });
     }
+    
+    // Initialize Emoji Picker and File Upload
+    initEmojiPicker();
+    initFileUpload();
 
     const leaveChatBtn = document.getElementById('leaveChatBtn');
     if (leaveChatBtn) {
@@ -170,6 +174,18 @@ function handleMessage(data) {
             ws.send(JSON.stringify({ type: 'read_receipt', message_id: data.id }));
         }
 
+    } else if (data.type === 'file') {
+        const msgId = `file-${data.username}-${data.timestamp}`;
+        if (displayedMessageIds.has(msgId)) return;
+        displayedMessageIds.add(msgId);
+        
+        displayFileMessage(data, data.username === currentUser?.username);
+        messageCount++;
+        updateMessageCount();
+        
+        if (document.hidden && notificationSound) {
+            notificationSound.play().catch(e => console.log('Audio play blocked'));
+        }
     } else if (data.type === 'system') {
         showSystemMessage(data.content);
     } else if (data.type === 'users_update') {
@@ -420,6 +436,214 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, arguments), wait);
     };
+}
+
+// Emoji and File Upload Functions
+function initEmojiPicker() {
+    const emojiBtn = document.getElementById('emojiBtn');
+    const emojiPicker = document.getElementById('emojiPicker');
+    const messageInput = document.getElementById('messageInput');
+    
+    if (!emojiBtn || !emojiPicker || !messageInput) return;
+    
+    // Toggle emoji picker
+    emojiBtn.addEventListener('click', () => {
+        const isVisible = emojiPicker.style.display !== 'none';
+        emojiPicker.style.display = isVisible ? 'none' : 'block';
+    });
+    
+    // Handle emoji selection
+    const emojiButtons = emojiPicker.querySelectorAll('.emoji-btn');
+    emojiButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const emoji = btn.textContent;
+            const cursorPos = messageInput.selectionStart;
+            const textBefore = messageInput.value.substring(0, cursorPos);
+            const textAfter = messageInput.value.substring(cursorPos);
+            messageInput.value = textBefore + emoji + textAfter;
+            messageInput.focus();
+            messageInput.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+            emojiPicker.style.display = 'none';
+            updateCharCount();
+        });
+    });
+    
+    // Close emoji picker when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
+            emojiPicker.style.display = 'none';
+        }
+    });
+}
+
+function initFileUpload() {
+    const fileBtn = document.getElementById('fileBtn');
+    const fileInput = document.getElementById('fileInput');
+    const messageForm = document.getElementById('messageForm');
+    
+    if (!fileBtn || !fileInput || !messageForm) return;
+    
+    fileBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+        
+        files.forEach(file => {
+            uploadFile(file);
+        });
+        
+        // Clear file input
+        fileInput.value = '';
+    });
+}
+
+async function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Show upload progress
+    showUploadProgress(file.name);
+    
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            sendFileMessage(file.name, result.file_url, result.file_size);
+        } else {
+            showError('Failed to upload file');
+        }
+    } catch (error) {
+        console.error('File upload error:', error);
+        showError('File upload failed');
+    }
+    
+    hideUploadProgress();
+}
+
+function showUploadProgress(filename) {
+    const progressHtml = `
+        <div class="upload-progress" id="uploadProgress">
+            <div class="file-info">
+                <div class="file-name">Uploading ${filename}...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const messagesContainer = document.getElementById('messagesContainer');
+    messagesContainer.insertAdjacentHTML('beforeend', progressHtml);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Simulate progress
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress > 90) progress = 90;
+        
+        const progressFill = document.querySelector('.progress-fill');
+        if (progressFill) {
+            progressFill.style.width = progress + '%';
+        }
+    }, 200);
+    
+    // Store interval ID to clear later
+    window.uploadProgressInterval = progressInterval;
+}
+
+function hideUploadProgress() {
+    if (window.uploadProgressInterval) {
+        clearInterval(window.uploadProgressInterval);
+    }
+    
+    const progressElement = document.getElementById('uploadProgress');
+    if (progressElement) {
+        progressElement.remove();
+    }
+}
+
+function sendFileMessage(filename, fileUrl, fileSize) {
+    const messageData = {
+        type: 'file',
+        filename: filename,
+        file_url: fileUrl,
+        file_size: fileSize,
+        timestamp: new Date().toISOString()
+    };
+    
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(messageData));
+    }
+}
+
+function displayFileMessage(message, isOwn) {
+    const fileIcon = getFileIcon(message.filename);
+    const formattedSize = formatFileSize(message.file_size);
+    
+    const messageHtml = `
+        <div class="message-wrapper ${isOwn ? 'message-own' : 'message-other'}">
+            <div class="message-bubble">
+                <div class="file-preview">
+                    <div class="file-icon">${fileIcon}</div>
+                    <div class="file-info">
+                        <div class="file-name">${escapeHtml(message.filename)}</div>
+                        <div class="file-size">${formattedSize}</div>
+                    </div>
+                    <a href="${message.file_url}" download="${message.filename}" class="file-download">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                </div>
+                <div class="message-meta">
+                    ${message.username} • ${formatTime(message.timestamp)}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const messagesContainer = document.getElementById('messagesContainer');
+    messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function getFileIcon(filename) {
+    const extension = filename.split('.').pop().toLowerCase();
+    const iconMap = {
+        'pdf': '📄',
+        'doc': '📝',
+        'docx': '📝',
+        'txt': '📄',
+        'jpg': '🖼️',
+        'jpeg': '🖼️',
+        'png': '🖼️',
+        'gif': '🖼️',
+        'mp4': '🎥',
+        'mp3': '🎵',
+        'zip': '📦',
+        'rar': '📦'
+    };
+    
+    return iconMap[extension] || '📎';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 document.addEventListener('DOMContentLoaded', initChat);

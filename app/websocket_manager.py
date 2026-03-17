@@ -96,6 +96,9 @@ class ConnectionManager:
         if room_id:
             message_dict["room_id"] = room_id
         await self.broadcast(json.dumps(message_dict), room_id=room_id)
+    
+    async def broadcast_file_message(self, file_message: Dict[str, Any], room_id: Optional[int] = None):
+        await self.broadcast(json.dumps(file_message), room_id=room_id)
         
     async def broadcast_typing(self, username: str, is_typing: bool, room_id: Optional[int] = None):
         message_dict: Dict[str, Any] = {

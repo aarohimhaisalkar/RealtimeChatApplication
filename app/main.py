@@ -1,12 +1,15 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends, HTTPException, status, Form
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends, HTTPException, status, Form, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from datetime import timedelta
 import json
 import asyncio
+import os
+import uuid
+from pathlib import Path
 
 from .database import get_db, create_tables, get_recent_messages, save_message, create_user, get_user_by_username, get_user_by_email, update_last_login
 from .websocket_manager import manager
@@ -200,6 +203,24 @@ async def websocket_endpoint(websocket: WebSocket, token: str, t: str = None):
                     
                     # Broadcast message to all users
                     await manager.broadcast_message(username, content)
+            
+            elif message_data.get("type") == "file":
+                # Handle file message
+                filename = message_data.get("filename", "")
+                file_url = message_data.get("file_url", "")
+                file_size = message_data.get("file_size", 0)
+                
+                # Broadcast file message to all users
+                file_message = {
+                    "type": "file",
+                    "username": username,
+                    "filename": filename,
+                    "file_url": file_url,
+                    "file_size": file_size,
+                    "timestamp": message_data.get("timestamp", "")
+                }
+                
+                await manager.broadcast_file_message(file_message)
                     
     except WebSocketDisconnect:
         disconnected_username = manager.disconnect(websocket)
@@ -209,6 +230,48 @@ async def websocket_endpoint(websocket: WebSocket, token: str, t: str = None):
         print(f"WebSocket error: {e}")
         manager.disconnect(websocket)
         await manager.update_online_users()
+
+# File upload endpoint
+@app.post("/api/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Create uploads directory if it doesn't exist
+    uploads_dir = Path("uploads")
+    uploads_dir.mkdir(exist_ok=True)
+    
+    # Generate unique filename
+    file_extension = Path(file.filename).suffix
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    file_path = uploads_dir / unique_filename
+    
+    # Save file
+    try:
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+        
+        # Return file info
+        return {
+            "message": "File uploaded successfully",
+            "filename": file.filename,
+            "file_url": f"/uploads/{unique_filename}",
+            "file_size": len(content),
+            "file_type": file.content_type
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
+
+# Serve uploaded files
+@app.get("/uploads/{filename}")
+async def serve_file(filename: str):
+    file_path = Path("uploads") / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(file_path)
 
 @app.get("/health")
 async def health_check():

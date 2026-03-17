@@ -115,18 +115,55 @@
             <!-- Message Input Area -->
             <div class="chat-input-area">
                 <form id="messageForm" class="chat-form">
-                    <input 
-                        type="text" 
-                        id="messageInput" 
-                        placeholder="Type your message... (Press Enter to send)"
-                        class="chat-input"
-                        maxlength="500"
-                        autocomplete="off"
-                    >
-                    <button type="submit" class="btn-send">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
+                    <div class="input-group">
+                        <button type="button" id="emojiBtn" class="btn-emoji" title="Add Emoji">
+                            <i class="fas fa-smile"></i>
+                        </button>
+                        <button type="button" id="fileBtn" class="btn-file" title="Upload File">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="Type your message... (Press Enter to send)"
+                            class="chat-input"
+                            maxlength="500"
+                            autocomplete="off"
+                        >
+                        <button type="submit" class="btn-send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <!-- File Upload (Hidden) -->
+                    <input type="file" id="fileInput" style="display: none;" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif" multiple>
                 </form>
+                
+                <!-- Emoji Picker (Hidden by default) -->
+                <div id="emojiPicker" class="emoji-picker" style="display: none;">
+                    <div class="emoji-grid">
+                        <!-- Common emojis -->
+                        <span class="emoji-btn">😀</span>
+                        <span class="emoji-btn">😂</span>
+                        <span class="emoji-btn">❤️</span>
+                        <span class="emoji-btn">👍</span>
+                        <span class="emoji-btn">🎉</span>
+                        <span class="emoji-btn">🔥</span>
+                        <span class="emoji-btn">😊</span>
+                        <span class="emoji-btn">😍</span>
+                        <span class="emoji-btn">🤔</span>
+                        <span class="emoji-btn">😎</span>
+                        <span class="emoji-btn">👏</span>
+                        <span class="emoji-btn">🙌</span>
+                        <span class="emoji-btn">💪</span>
+                        <span class="emoji-btn">🎯</span>
+                        <span class="emoji-btn">🚀</span>
+                        <span class="emoji-btn">💯</span>
+                        <span class="emoji-btn">⭐</span>
+                        <span class="emoji-btn">✨</span>
+                        <span class="emoji-btn">🌟</span>
+                    </div>
+                </div>
+                
                 <div class="text-xs text-slate-400 text-right mt-2">
                     <span id="charCount">0</span>/500 characters
                 </div>
