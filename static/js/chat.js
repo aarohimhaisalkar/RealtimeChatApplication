@@ -112,6 +112,22 @@ function initChat() {
     // Initialize Emoji Picker and File Upload
     initEmojiPicker();
     initFileUpload();
+    
+    // Add debug button functionality
+    const debugBtn = document.getElementById('debugBtn');
+    if (debugBtn) {
+        debugBtn.addEventListener('click', async () => {
+            try {
+                const testResponse = await fetch('/api/test');
+                const result = await testResponse.json();
+                console.log('Debug - API Test Result:', result);
+                alert('API Test: ' + JSON.stringify(result));
+            } catch (error) {
+                console.error('Debug - API Test Failed:', error);
+                alert('API Test Failed: ' + error.message);
+            }
+        });
+    }
 
     const leaveChatBtn = document.getElementById('leaveChatBtn');
     if (leaveChatBtn) {
@@ -518,6 +534,20 @@ function initFileUpload() {
 }
 
 async function uploadFile(file) {
+    // First test if API is accessible
+    try {
+        const testResponse = await fetch('/api/test');
+        console.log('API test response:', testResponse.status);
+        if (!testResponse.ok) {
+            showError('API endpoints not accessible');
+            return;
+        }
+    } catch (error) {
+        console.error('API test failed:', error);
+        showError('Cannot connect to server');
+        return;
+    }
+    
     const formData = new FormData();
     formData.append('file', file);
     

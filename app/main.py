@@ -231,6 +231,11 @@ async def websocket_endpoint(websocket: WebSocket, token: str, t: str = None):
         manager.disconnect(websocket)
         await manager.update_online_users()
 
+# Test endpoint to verify API is working
+@app.get("/api/test")
+async def test_endpoint():
+    return {"message": "API is working", "status": "ok"}
+
 # File upload endpoint
 @app.post("/api/upload")
 async def upload_file(
