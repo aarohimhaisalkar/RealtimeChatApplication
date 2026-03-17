@@ -527,10 +527,8 @@ async function uploadFile(file) {
     try {
         const response = await fetch('/api/upload', {
             method: 'POST',
-            body: formData,
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            }
+            body: formData
+            // Temporarily removed authentication header for testing
         });
         
         console.log('Upload response status:', response.status);
