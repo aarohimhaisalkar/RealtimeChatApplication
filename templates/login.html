@@ -158,11 +158,13 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Store token
+                    // Store tokens
                     if (remember) {
                         localStorage.setItem('access_token', data.access_token);
+                        localStorage.setItem('refresh_token', data.refresh_token);
                     } else {
                         sessionStorage.setItem('access_token', data.access_token);
+                        sessionStorage.setItem('refresh_token', data.refresh_token);
                     }
                     
                     // Store user info

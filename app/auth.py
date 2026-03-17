@@ -58,6 +58,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
+def create_refresh_token(data: dict) -> str:
+    """Create a long-lived refresh token."""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=7)  # 7 days
+    to_encode.update({"exp": expire, "type": "refresh"})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
 def verify_token(token: str) -> dict:
     """Verify and decode a JWT token. Raises JWTError on invalid tokens."""
     try:

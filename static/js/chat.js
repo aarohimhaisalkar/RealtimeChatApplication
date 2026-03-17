@@ -27,16 +27,7 @@ const typingText = document.getElementById('typingText');
 const searchInput = document.getElementById('searchInput');
 const notificationSound = document.getElementById('notificationSound');
 
-// Get authentication token and user info
-function getAuthInfo() {
-    authToken = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-    const userInfo = localStorage.getItem('user_info');
-    if (userInfo) {
-        currentUser = JSON.parse(userInfo);
-    }
-    return { token: authToken, user: currentUser };
-}
-
+// Check if user is authenticated
 function isAuthenticated() {
     const { token } = getAuthInfo();
     return token !== null;
@@ -60,6 +51,9 @@ function initChat() {
     if (currentUserSpan) {
         currentUserSpan.textContent = user.username;
     }
+    
+    // Start automatic token refresh
+    startTokenRefreshTimer();
     
     connectWebSocket();
     
@@ -350,7 +344,9 @@ function markAsRead(messageId) {
 
 function logout() {
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('refresh_token');
     localStorage.removeItem('user_info');
     if (ws) ws.close();
     window.location.href = '/';

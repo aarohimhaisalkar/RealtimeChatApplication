@@ -11,10 +11,10 @@ import os
 import uuid
 from pathlib import Path
 
-from .database import get_db, create_tables, get_recent_messages, save_message, create_user, get_user_by_username, get_user_by_email, update_last_login
+from .database import get_db, create_tables, get_recent_messages, save_message, create_user, get_user_by_username, get_user_by_email, update_last_login, get_all_rooms, create_room, search_messages, update_message, delete_message, get_direct_messages
 from .websocket_manager import manager
 from .models import Message, User
-from .auth import authenticate_user, create_access_token, get_password_hash, validate_password, validate_username, validate_email, ACCESS_TOKEN_EXPIRE_MINUTES
+from .auth import authenticate_user, create_access_token, get_password_hash, validate_password, validate_username, validate_email, create_refresh_token, ACCESS_TOKEN_EXPIRE_MINUTES
 
 app = FastAPI(title="Real-Time Chat Application")
 
@@ -139,11 +139,66 @@ async def login_user(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     
+    # Create refresh token
+    refresh_token = create_refresh_token(
+        data={"sub": user.username}
+    )
+    
     return {
         "access_token": access_token,
+        "refresh_token": refresh_token,
         "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "user": user.to_dict()
     }
+
+@app.post("/api/refresh")
+async def refresh_token(
+    refresh_token: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    try:
+        from .auth import verify_token
+        payload = verify_token(refresh_token)
+        
+        if payload.get("type") != "refresh":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token"
+            )
+        
+        username = payload.get("sub")
+        if not username:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token"
+            )
+        
+        # Get user
+        user = get_user_by_username(db, username)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+        
+        # Create new access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.username}, expires_delta=access_token_expires
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token"
+        )
 
 @app.get("/chat", response_class=HTMLResponse)
 async def get_chat_page(request: Request):
