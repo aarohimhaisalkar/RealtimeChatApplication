@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends, HTTPException, status, Form, UploadFile, File
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends, HTTPException, status, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
@@ -236,38 +236,18 @@ async def websocket_endpoint(websocket: WebSocket, token: str, t: str = None):
 async def test_endpoint():
     return {"message": "API is working", "status": "ok"}
 
-# File upload endpoint
+# Simple file upload test (without file handling)
 @app.post("/api/upload")
-async def upload_file(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
-):
-    # Simple authentication check (you can enhance this later)
+async def upload_file():
     try:
-        # Create uploads directory if it doesn't exist
-        uploads_dir = Path("uploads")
-        uploads_dir.mkdir(exist_ok=True)
-        
-        # Generate unique filename
-        file_extension = Path(file.filename).suffix
-        unique_filename = f"{uuid.uuid4()}{file_extension}"
-        file_path = uploads_dir / unique_filename
-        
-        # Save file
-        content = await file.read()
-        with open(file_path, "wb") as buffer:
-            buffer.write(content)
-        
-        # Return file info
         return {
-            "message": "File uploaded successfully",
-            "filename": file.filename,
-            "file_url": f"/uploads/{unique_filename}",
-            "file_size": len(content),
-            "file_type": file.content_type
+            "message": "File upload endpoint working",
+            "test": True,
+            "file_url": "/uploads/test.txt",
+            "file_size": 1024
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
+        return {"error": str(e)}
 
 # Serve uploaded files
 @app.get("/uploads/{filename}")
