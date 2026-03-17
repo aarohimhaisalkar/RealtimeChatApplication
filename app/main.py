@@ -30,6 +30,27 @@ templates = Jinja2Templates(directory="templates")
 async def startup_event():
     create_tables()
 
+# Basic test endpoint - FIRST THING TO TEST
+@app.get("/")
+async def root():
+    return {"message": "Chat app is running"}
+
+@app.get("/api/test")
+async def test_endpoint():
+    return {"message": "API is working", "status": "ok"}
+
+@app.post("/api/upload")
+async def upload_file():
+    try:
+        return {
+            "message": "File upload endpoint working",
+            "test": True,
+            "file_url": "/uploads/test.txt",
+            "file_size": 1024
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 # Authentication dependency
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     from .auth import verify_token
