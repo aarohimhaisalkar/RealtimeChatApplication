@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat - Sign In</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="gradient-bg">
+    <!-- Floating shapes background -->
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <!-- Main container -->
+    <div class="auth-wrapper">
+        <div class="auth-container">
+            <!-- Logo and title -->
+            <div class="text-center mb-8">
+                <div class="icon-logo">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-2">Real-Time Chat</h1>
+                <p class="text-slate-300 text-lg">Professional Communication Platform</p>
+            </div>
+
+            <!-- Login card -->
+            <div class="glass-card">
+                <!-- Success/Error Messages -->
+                <div id="messageContainer"></div>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user mr-2 text-indigo-400"></i>
+                            Username or Email
+                        </label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required
+                            placeholder="Enter your username or email"
+                            class="form-input"
+                        >
+                        <p class="mt-1 text-xs text-slate-400">Enter your username or email address</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock mr-2 text-indigo-400"></i>
+                            Password
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required
+                                placeholder="Enter your password"
+                                class="form-input has-icon-right"
+                            >
+                            <button type="button" id="togglePassword" class="input-icon-btn">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2 flex items-center justify-between">
+                            <label class="flex items-center text-sm text-slate-400">
+                                <input type="checkbox" id="remember" class="mr-2 rounded">
+                                Remember me
+                            </label>
+                            <!-- Removed dead "Forgot password?" link (#18) -->
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary mt-6">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Sign In
+                    </button>
+                </form>
+
+                <!-- Registration Link -->
+                <div class="mt-6 text-center">
+                    <p class="text-slate-400">
+                        Don't have an account? 
+                        <a href="/register" class="font-medium">Create Account</a>
+                    </p>
+                </div>
+
+                <!-- Features -->
+                <div class="feature-grid">
+                    <div>
+                        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                        <p class="text-xs text-slate-400">Real-time</p>
+                    </div>
+                    <div>
+                        <div class="feature-icon"><i class="fas fa-users"></i></div>
+                        <p class="text-xs text-slate-400">Multi-user</p>
+                    </div>
+                    <div>
+                        <div class="feature-icon"><i class="fas fa-lock"></i></div>
+                        <p class="text-xs text-slate-400">Secure</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-6 text-slate-400 text-sm">
+                <p>Professional Chat Solution • Built with FastAPI & WebSockets</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password visibility toggle
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        });
+
+        // Check for registration success
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('registered') === 'true') {
+            showSuccess('Account created successfully! Please sign in.');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            if (!username || !password) {
+                showError('Please enter both username and password');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store token
+                    if (remember) {
+                        localStorage.setItem('access_token', data.access_token);
+                    } else {
+                        sessionStorage.setItem('access_token', data.access_token);
+                    }
+                    
+                    // Store user info
+                    localStorage.setItem('user_info', JSON.stringify(data.user));
+                    
+                    showSuccess('Login successful! Redirecting to chat...');
+                    setTimeout(function() {
+                        window.location.href = '/chat';
+                    }, 1000);
+                } else {
+                    showError(data.detail || data.error || 'Login failed');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            }
+        });
+        
+        function showError(message) {
+            showMessage(message, 'error');
+        }
+        
+        function showSuccess(message) {
+            showMessage(message, 'success');
+        }
+        
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = '';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'alert alert-error' : 'alert alert-success';
+            messageDiv.textContent = message;
+            
+            container.appendChild(messageDiv);
+            
+            setTimeout(function() {
+                messageDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat - Chat Room</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="chat-app">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <!-- Header -->
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">Professional Chat</h1>
+                    <p class="text-slate-400 text-sm">Connected as <span id="currentUser" class="text-indigo-400 font-medium"></span></p>
+                </div>
+            </div>
+            
+            <!-- Rooms Section -->
+            <div class="rooms-list-wrapper mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        <i class="fas fa-hashtag mr-2"></i>Rooms
+                    </h2>
+                    <button id="addRoomBtn" class="text-slate-400 hover:text-white transition-colors">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div id="roomsList" class="flex flex-col gap-1">
+                    <div class="room-item active" data-room-id="null">
+                        <i class="fas fa-globe mr-2"></i>Global Chat
+                    </div>
+                    <!-- Rooms will be added here -->
+                </div>
+            </div>
+
+            <!-- Online Users -->
+            <div class="users-list-wrapper">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        <i class="fas fa-users mr-2"></i>Online Users
+                    </h2>
+                    <span id="userCount" style="background:var(--color-indigo-600);color:white;font-size:0.75rem;padding:0.25rem 0.5rem;border-radius:9999px;">0</span>
+                </div>
+                <div id="usersList" class="flex-col gap-2">
+                    <!-- Users will be added here dynamically -->
+                </div>
+            </div>
+            
+            <!-- Stats (Moved above leave button) -->
+            <div class="p-4 mt-auto" style="border-top:1px solid var(--color-slate-700);">
+                <div class="flex gap-4 text-center">
+                    <div class="flex-1 p-3 rounded-lg" style="background:rgba(30,41,59,0.5);">
+                        <div class="text-2xl font-bold text-indigo-400" id="messageCount">0</div>
+                        <div class="text-xs text-slate-400">Messages</div>
+                    </div>
+                    <div class="flex-1 p-3 rounded-lg" style="background:rgba(30,41,59,0.5);">
+                        <div class="text-2xl font-bold text-emerald-400" id="activeCount">0</div>
+                        <div class="text-xs text-slate-400">Active Now</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Leave Chat Button -->
+            <div class="p-4" style="border-top:1px solid var(--color-slate-700);">
+                <button id="leaveChatBtn" class="btn-primary" style="background:var(--color-red-600);width:100%;">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Leave Chat
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Chat Area -->
+        <div class="chat-main">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="flex items-center gap-3">
+                    <button id="mobileToggle" class="mobile-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="pulse-indicator w-3 h-3 rounded-full" style="background:var(--color-emerald-500);width:12px;height:12px;"></div>
+                    <span class="text-lg font-medium text-white" id="activeRoomName">Global Chat Room</span>
+                </div>
+                
+                <!-- Search Bar -->
+                <div class="search-container hidden md:flex items-center">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search messages..." class="search-input">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-slate-400" id="connectionStatus">
+                        <i class="fas fa-circle text-emerald-500 mr-1"></i>Connected
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Messages Container -->
+            <div id="messagesContainer" class="messages-area custom-scrollbar">
+                <!-- Messages will be added here dynamically -->
+            </div>
+            
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="typing-indicator">
+                <span id="typingText" class="text-xs text-slate-400 italic px-6 py-2"></span>
+            </div>
+
+            <!-- Message Input Area -->
+            <div class="chat-input-area">
+                <form id="messageForm" class="chat-form">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Type your message... (Press Enter to send)"
+                        class="chat-input"
+                        maxlength="500"
+                        autocomplete="off"
+                    >
+                    <button type="submit" class="btn-send">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+                <div class="text-xs text-slate-400 text-right mt-2">
+                    <span id="charCount">0</span>/500 characters
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Sound -->
+    <audio id="notificationSound" src="/static/sounds/notification.mp3" preload="auto"></audio>
+
+    <script src="/static/js/chat.js"></script>
+</body>
+</html>

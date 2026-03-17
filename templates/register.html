@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - Real-Time Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="gradient-bg">
+    <!-- Floating shapes background -->
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <!-- Main container -->
+    <div class="auth-wrapper">
+        <div class="auth-container">
+            <!-- Logo and title -->
+            <div class="text-center mb-8">
+                <div class="icon-logo">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-2">Create Account</h1>
+                <p class="text-slate-300 text-lg">Join our professional chat platform</p>
+            </div>
+
+            <!-- Registration card -->
+            <div class="glass-card">
+                <form id="registerForm">
+                    <!-- Full Name -->
+                    <div class="form-group">
+                        <label for="fullName" class="form-label">
+                            <i class="fas fa-user mr-2 text-indigo-400"></i>
+                            Full Name
+                        </label>
+                        <input 
+                            type="text" 
+                            id="fullName" 
+                            name="fullName" 
+                            required
+                            maxlength="100"
+                            placeholder="Enter your full name"
+                            class="form-input"
+                        >
+                        <div class="mt-1 text-xs text-slate-400">Optional, helps others recognize you</div>
+                    </div>
+
+                    <!-- Username -->
+                    <div class="form-group">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-at mr-2 text-indigo-400"></i>
+                            Username
+                        </label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required
+                            minlength="3"
+                            maxlength="20"
+                            placeholder="Choose a username"
+                            class="form-input"
+                        >
+                        <div class="mt-1 text-xs text-slate-400">3-20 characters, letters, numbers, underscores, hyphens</div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope mr-2 text-indigo-400"></i>
+                            Email Address
+                        </label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            required
+                            placeholder="your@email.com"
+                            class="form-input"
+                        >
+                        <div class="mt-1 text-xs text-slate-400">We'll never share your email with anyone</div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock mr-2 text-indigo-400"></i>
+                            Password
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required
+                                minlength="8"
+                                maxlength="72"
+                                placeholder="Create a strong password"
+                                class="form-input has-icon-right"
+                            >
+                            <button type="button" id="togglePassword" class="input-icon-btn">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2">
+                            <div class="password-strength" id="passwordStrength"></div>
+                            <div class="text-xs text-slate-400 mt-1" id="passwordHint">Password strength will appear here</div>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="form-group">
+                        <label for="confirmPassword" class="form-label">
+                            <i class="fas fa-lock mr-2 text-indigo-400"></i>
+                            Confirm Password
+                        </label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="confirmPassword" 
+                            required
+                            placeholder="Confirm your password"
+                            class="form-input"
+                        >
+                        <div class="mt-1 text-xs text-slate-400" id="confirmPasswordHint"></div>
+                    </div>
+
+                    <!-- Removed dead Terms/Privacy checkbox (#19) -->
+
+                    <button type="submit" class="btn-primary mt-6">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Create Account
+                    </button>
+                </form>
+
+                <!-- Login Link -->
+                <div class="mt-6 text-center">
+                    <p class="text-slate-400">
+                        Already have an account? 
+                        <a href="/" class="font-medium">Sign In</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Security Features -->
+            <div class="feature-grid">
+                <div>
+                    <div class="feature-icon emerald"><i class="fas fa-shield-alt"></i></div>
+                    <p class="text-xs text-slate-400">Secure</p>
+                </div>
+                <div>
+                    <div class="feature-icon emerald"><i class="fas fa-user-secret"></i></div>
+                    <p class="text-xs text-slate-400">Private</p>
+                </div>
+                <div>
+                    <div class="feature-icon emerald"><i class="fas fa-lock"></i></div>
+                    <p class="text-xs text-slate-400">Encrypted</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password visibility toggle
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        });
+
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            const feedback = [];
+            
+            if (password.length >= 8) strength++;
+            else feedback.push("At least 8 characters");
+            
+            if (/[a-z]/.test(password)) strength++;
+            else feedback.push("One lowercase letter");
+            
+            if (/[A-Z]/.test(password)) strength++;
+            else feedback.push("One uppercase letter");
+            
+            if (/[0-9]/.test(password)) strength++;
+            else feedback.push("One number");
+            
+            if (/[^a-zA-Z0-9]/.test(password)) strength++;
+            else feedback.push("One special character");
+            
+            return { strength, feedback };
+        }
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('passwordStrength');
+            const hint = document.getElementById('passwordHint');
+            
+            // clear classes first
+            strengthBar.classList.remove('strength-weak', 'strength-medium', 'strength-strong');
+            
+            if (password.length === 0) {
+                hint.textContent = 'Password strength will appear here';
+                hint.className = 'mt-1 text-xs text-slate-400';
+                return;
+            }
+            
+            const { strength, feedback } = checkPasswordStrength(password);
+            
+            if (strength <= 2) {
+                strengthBar.classList.add('strength-weak');
+                hint.textContent = 'Weak password: ' + feedback.slice(0, 2).join(', ');
+                hint.className = 'mt-1 text-xs text-red-400';
+            } else if (strength <= 4) {
+                strengthBar.classList.add('strength-medium');
+                hint.textContent = 'Medium strength: ' + (feedback.length > 0 ? feedback[0] : 'Good password');
+                hint.className = 'mt-1 text-xs text-yellow-400';
+            } else {
+                strengthBar.classList.add('strength-strong');
+                hint.textContent = 'Strong password!';
+                hint.className = 'mt-1 text-xs text-emerald-400';
+            }
+        });
+
+        // Confirm password validation
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const confirmPasswordHint = document.getElementById('confirmPasswordHint');
+        
+        function validatePasswordMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (confirmPassword.length === 0) {
+                confirmPasswordHint.textContent = '';
+                return;
+            }
+            
+            if (password === confirmPassword) {
+                confirmPasswordHint.textContent = '✓ Passwords match';
+                confirmPasswordHint.className = 'mt-1 text-xs text-emerald-400';
+            } else {
+                confirmPasswordHint.textContent = '✗ Passwords do not match';
+                confirmPasswordHint.className = 'mt-1 text-xs text-red-400';
+            }
+        }
+        
+        confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+        passwordInput.addEventListener('input', validatePasswordMatch);
+
+        // Form submission
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                fullName: document.getElementById('fullName').value.trim(),
+                username: document.getElementById('username').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                password: document.getElementById('password').value,
+                confirmPassword: document.getElementById('confirmPassword').value
+            };
+            
+            if (formData.password !== formData.confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+            
+            const { strength } = checkPasswordStrength(formData.password);
+            if (strength <= 2) {
+                showError('Please choose a stronger password');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        username: formData.username,
+                        email: formData.email,
+                        password: formData.password,
+                        full_name: formData.fullName || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Account created successfully! Redirecting to login...');
+                    setTimeout(() => {
+                        window.location.href = '/?registered=true';
+                    }, 2000);
+                } else {
+                    showError(data.detail || data.error || 'Registration failed');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            }
+        });
+        
+        function showError(message) {
+            const existingErrors = document.querySelectorAll('.alert');
+            existingErrors.forEach(err => err.remove());
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-error mb-4';
+            errorDiv.textContent = message;
+            
+            const form = document.getElementById('registerForm');
+            form.parentNode.insertBefore(errorDiv, form);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const existingMessages = document.querySelectorAll('.alert');
+            existingMessages.forEach(msg => msg.remove());
+            
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert alert-success mb-4';
+            successDiv.textContent = message;
+            
+            const form = document.getElementById('registerForm');
+            form.parentNode.insertBefore(successDiv, form);
+        }
+    </script>
+</body>
+</html>
