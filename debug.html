@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Chat Issues</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Chat Application Debug</h1>
+    
+    <h2>1. Check Authentication Status</h2>
+    <button onclick="checkAuth()">Check Authentication</button>
+    <div id="authResult"></div>
+    
+    <h2>2. Test Login</h2>
+    <input type="text" id="username" placeholder="Username" value="Aarohi">
+    <input type="password" id="password" placeholder="Password" value="password123">
+    <button onclick="testLogin()">Test Login</button>
+    <div id="loginResult"></div>
+    
+    <h2>3. Test WebSocket Connection</h2>
+    <button onclick="testWebSocket()">Test WebSocket</button>
+    <div id="wsResult"></div>
+    
+    <h2>4. Check DOM Elements</h2>
+    <button onclick="checkDOM()">Check DOM Elements</button>
+    <div id="domResult"></div>
+
+    <script>
+        function checkAuth() {
+            const result = document.getElementById('authResult');
+            const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+            const userStr = localStorage.getItem('user_info') || sessionStorage.getItem('user_info');
+            
+            let html = '<h3>Authentication Status:</h3>';
+            html += `<p>Token: ${token ? '✅ Found' : '❌ Not found'}</p>`;
+            html += `<p>User Info: ${userStr ? '✅ Found' : '❌ Not found'}</p>`;
+            
+            if (token) {
+                html += `<p>Token (first 20 chars): ${token.substring(0, 20)}...</p>`;
+            }
+            
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    html += `<p>User: ${JSON.stringify(user, null, 2)}</p>`;
+                } catch (e) {
+                    html += `<p class="error">Error parsing user info: ${e.message}</p>`;
+                }
+            }
+            
+            result.innerHTML = html;
+        }
+        
+        async function testLogin() {
+            const result = document.getElementById('loginResult');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            result.innerHTML = '<p>Testing login...</p>';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store tokens
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('refresh_token', data.refresh_token);
+                    localStorage.setItem('user_info', JSON.stringify(data.user));
+                    
+                    result.innerHTML = `
+                        <h3 class="success">✅ Login Successful!</h3>
+                        <p>Access Token: ${data.access_token.substring(0, 20)}...</p>
+                        <p>User: ${JSON.stringify(data.user, null, 2)}</p>
+                    `;
+                } else {
+                    result.innerHTML = `<h3 class="error">❌ Login Failed</h3><p>${data.detail || data.error || 'Unknown error'}</p>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<h3 class="error">❌ Network Error</h3><p>${error.message}</p>`;
+            }
+        }
+        
+        function testWebSocket() {
+            const result = document.getElementById('wsResult');
+            const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+            
+            if (!token) {
+                result.innerHTML = '<p class="error">❌ No token found. Please login first.</p>';
+                return;
+            }
+            
+            result.innerHTML = '<p>Testing WebSocket connection...</p>';
+            
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/${token}?t=${Date.now()}`;
+            
+            const ws = new WebSocket(wsUrl);
+            
+            let messageCount = 0;
+            const maxMessages = 5;
+            
+            ws.onopen = function() {
+                result.innerHTML += '<p class="success">✅ WebSocket Connected!</p>';
+            };
+            
+            ws.onmessage = function(event) {
+                if (messageCount < maxMessages) {
+                    const data = JSON.parse(event.data);
+                    result.innerHTML += `<p>📨 Message ${messageCount + 1}: ${data.type} - ${JSON.stringify(data)}</p>`;
+                    messageCount++;
+                    
+                    if (messageCount >= maxMessages) {
+                        ws.close();
+                        result.innerHTML += '<p>✅ Test completed (received 5 messages)</p>';
+                    }
+                }
+            };
+            
+            ws.onerror = function(error) {
+                result.innerHTML += `<p class="error">❌ WebSocket Error: ${error}</p>`;
+            };
+            
+            ws.onclose = function(event) {
+                result.innerHTML += `<p>🔌 WebSocket Closed (code: ${event.code})</p>`;
+            };
+            
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                if (ws.readyState === WebSocket.CONNECTING) {
+                    ws.close();
+                    result.innerHTML += '<p class="error">❌ Connection timeout</p>';
+                }
+            }, 10000);
+        }
+        
+        function checkDOM() {
+            const result = document.getElementById('domResult');
+            
+            const elements = [
+                'messagesContainer',
+                'messageForm', 
+                'messageInput',
+                'usersList',
+                'currentUser',
+                'userCount',
+                'messageCount',
+                'activeCount',
+                'connectionStatus'
+            ];
+            
+            let html = '<h3>DOM Elements Check:</h3>';
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                const status = element ? '✅ Found' : '❌ Missing';
+                const className = element ? element.className : 'N/A';
+                html += `<p>${status} #${id} - Class: ${className}</p>`;
+            });
+            
+            result.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

@@ -78,10 +78,16 @@ def verify_token(token: str) -> dict:
 
 
 def authenticate_user(db, username: str, password: str):
-    """Authenticate a user with username and password."""
-    from .database import get_user_by_username
+    """Authenticate a user with username or email and password."""
+    from .database import get_user_by_username, get_user_by_email
 
+    # First try to find user by username
     user = get_user_by_username(db, username)
+    
+    # If not found by username, try by email
+    if not user:
+        user = get_user_by_email(db, username)
+    
     if not user:
         return False
     if not verify_password(password, user.hashed_password):

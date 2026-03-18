@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Emoji Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; background: #1e293b; color: white; }
+        .container { max-width: 500px; margin: 0 auto; }
+        button { padding: 15px; font-size: 20px; margin: 10px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        #emojiPicker { background: #374151; padding: 20px; border-radius: 10px; margin: 20px 0; display: none; }
+        .emoji { font-size: 30px; margin: 5px; cursor: pointer; padding: 10px; border-radius: 5px; }
+        .emoji:hover { background: #4b5563; }
+        #messageInput { width: 100%; padding: 15px; font-size: 16px; background: #374151; color: white; border: 1px solid #4b5563; border-radius: 5px; margin: 10px 0; }
+        .debug { background: #1f2937; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Simple Emoji Test</h1>
+        
+        <button id="emojiBtn">😊 Click for Emoji</button>
+        <button id="debugBtn">🔍 Debug Info</button>
+        <button id="forceBtn">🔴 Force Show</button>
+        
+        <input type="text" id="messageInput" placeholder="Message will appear here...">
+        
+        <div id="emojiPicker">
+            <div class="emoji">😀</div>
+            <div class="emoji">😂</div>
+            <div class="emoji">❤️</div>
+            <div class="emoji">👍</div>
+            <div class="emoji">🎉</div>
+            <div class="emoji">🔥</div>
+            <div class="emoji">😊</div>
+            <div class="emoji">😍</div>
+        </div>
+        
+        <div class="debug" id="debugInfo">
+            Debug info will appear here...
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 Page loaded, starting initialization...');
+        
+        // Get elements
+        const emojiBtn = document.getElementById('emojiBtn');
+        const emojiPicker = document.getElementById('emojiPicker');
+        const messageInput = document.getElementById('messageInput');
+        const debugBtn = document.getElementById('debugBtn');
+        const forceBtn = document.getElementById('forceBtn');
+        const debugInfo = document.getElementById('debugInfo');
+        
+        function updateDebug(message) {
+            debugInfo.innerHTML = message + '<br><small>Time: ' + new Date().toLocaleTimeString() + '</small>';
+            console.log('Debug:', message);
+        }
+        
+        // Check elements exist
+        updateDebug('Elements found: ' + 
+            (emojiBtn ? '✅' : '❌') + ' emojiBtn, ' +
+            (emojiPicker ? '✅' : '❌') + ' emojiPicker, ' +
+            (messageInput ? '✅' : '❌') + ' messageInput'
+        );
+        
+        // Emoji button click
+        if (emojiBtn) {
+            emojiBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('🎯 Emoji button clicked!');
+                
+                const isVisible = emojiPicker.style.display !== 'none';
+                emojiPicker.style.display = isVisible ? 'none' : 'block';
+                
+                updateDebug('Emoji picker ' + (isVisible ? 'hidden' : 'shown') + 
+                           '! Current display: ' + emojiPicker.style.display);
+            });
+        }
+        
+        // Debug button
+        if (debugBtn) {
+            debugBtn.addEventListener('click', function() {
+                const info = `
+emojiPicker display: ${emojiPicker.style.display}
+emojiPicker computed: ${window.getComputedStyle(emojiPicker).display}
+emojiPicker visible: ${emojiPicker.offsetWidth > 0 && emojiPicker.offsetHeight > 0}
+emojiPicker parent: ${emojiPicker.parentElement.tagName}
+                `;
+                updateDebug(info);
+            });
+        }
+        
+        // Force show button
+        if (forceBtn) {
+            forceBtn.addEventListener('click', function() {
+                emojiPicker.style.display = 'block';
+                emojiPicker.style.background = 'red';
+                emojiPicker.style.position = 'relative';
+                updateDebug('🔴 Picker forced to show with red background!');
+            });
+        }
+        
+        // Emoji clicks
+        const emojis = document.querySelectorAll('.emoji');
+        emojis.forEach(emoji => {
+            emoji.addEventListener('click', function() {
+                messageInput.value += emoji.textContent;
+                emojiPicker.style.display = 'none';
+                updateDebug('Added emoji: ' + emoji.textContent);
+            });
+        });
+        
+        console.log('✅ Initialization complete!');
+    </script>
+</body>
+</html>

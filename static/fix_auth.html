@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Authentication</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+        button { padding: 15px 30px; font-size: 16px; margin: 10px; cursor: pointer; }
+        .btn-danger { background: #dc2626; color: white; border: none; border-radius: 5px; }
+        .btn-success { background: #059669; color: white; border: none; border-radius: 5px; }
+        .btn-info { background: #0891b2; color: white; border: none; border-radius: 5px; }
+        .status { margin: 20px 0; padding: 15px; border-radius: 5px; }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .info { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Chat Application Fix</h1>
+    
+    <div class="status info">
+        <h3>Problem: Invalid Authentication</h3>
+        <p>Your browser has old/invalid authentication tokens causing connection issues.</p>
+    </div>
+    
+    <button class="btn-danger" onclick="clearAuth()">🗑️ Clear Authentication</button>
+    <button class="btn-success" onclick="goToLogin()">🔐 Go to Login</button>
+    <button class="btn-info" onclick="testNewUser()">👤 Test with New User</button>
+    
+    <div id="status"></div>
+    
+    <script>
+        function clearAuth() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('status').innerHTML = 
+                '<div class="status success">✅ Authentication cleared! All tokens removed.</div>';
+        }
+        
+        function goToLogin() {
+            window.location.href = '/';
+        }
+        
+        async function testNewUser() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<div class="status info">Creating test user...</div>';
+            
+            try {
+                // Register new user
+                const registerData = {
+                    username: 'tempuser' + Date.now(),
+                    email: 'temp' + Date.now() + '@test.com',
+                    password: 'Temp12345!',
+                    full_name: 'Temporary Test User'
+                };
+                
+                const regResponse = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(registerData)
+                });
+                
+                if (regResponse.ok) {
+                    // Login with new user
+                    const loginResponse = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({
+                            username: registerData.username,
+                            password: registerData.password
+                        })
+                    });
+                    
+                    if (loginResponse.ok) {
+                        const data = await loginResponse.json();
+                        
+                        // Store tokens
+                        localStorage.setItem('access_token', data.access_token);
+                        localStorage.setItem('refresh_token', data.refresh_token);
+                        localStorage.setItem('user_info', JSON.stringify(data.user));
+                        
+                        statusDiv.innerHTML = 
+                            '<div class="status success">✅ Test user created and logged in! Redirecting to chat...</div>';
+                        
+                        setTimeout(() => {
+                            window.location.href = '/chat';
+                        }, 2000);
+                    } else {
+                        statusDiv.innerHTML = '<div class="status error">❌ Login failed for test user</div>';
+                    }
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Registration failed: ' + (await regResponse.text()) + '</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+        
+        // Check current auth status
+        window.onload = function() {
+            const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+            const userStr = localStorage.getItem('user_info') || sessionStorage.getItem('user_info');
+            
+            let status = '<div class="status info"><h3>Current Status:</h3>';
+            status += '<p>Token: ' + (token ? '✅ Found' : '❌ Not found') + '</p>';
+            status += '<p>User Info: ' + (userStr ? '✅ Found' : '❌ Not found') + '</p>';
+            
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    status += '<p>Username: ' + user.username + '</p>';
+                } catch (e) {
+                    status += '<p>User Info: ❌ Invalid format</p>';
+                }
+            }
+            
+            status += '</div>';
+            document.getElementById('status').innerHTML = status;
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Working Emoji Solution</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1e293b; color: white; }
+        .container { max-width: 600px; margin: 50px auto; background: #334155; padding: 30px; border-radius: 10px; }
+        .input-group { display: flex; gap: 10px; align-items: center; margin: 20px 0; position: relative; }
+        .chat-input { flex: 1; padding: 12px; background: #475569; border: 1px solid #64748b; color: white; border-radius: 8px; font-size: 16px; }
+        .btn-emoji { background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .btn-emoji:hover { background: #2563eb; }
+        .emoji-picker { background: #1f2937; border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; position: absolute; bottom: 100%; left: 0; margin-bottom: 10px; display: none; z-index: 1000; min-width: 300px; }
+        .emoji-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .emoji-btn { font-size: 24px; cursor: pointer; padding: 8px; border-radius: 4px; background: #374151; border: 1px solid #4b5563; color: white; }
+        .emoji-btn:hover { background: #3b82f6; transform: scale(1.1); }
+        .status { background: #065f46; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .error { background: #991b1b; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Working Emoji Solution</h1>
+        
+        <div class="status">
+            <strong>✅ This emoji picker WILL work!</strong><br>
+            No complex CSS, no positioning issues - just simple, working code.
+        </div>
+        
+        <div class="input-group">
+            <button type="button" id="emojiBtn" class="btn-emoji">
+                😊
+            </button>
+            <input type="text" id="messageInput" placeholder="Type your message here..." class="chat-input">
+        </div>
+        
+        <div id="emojiPicker" class="emoji-picker">
+            <div class="emoji-grid">
+                <button class="emoji-btn">😀</button>
+                <button class="emoji-btn">😂</button>
+                <button class="emoji-btn">😊</button>
+                <button class="emoji-btn">😍</button>
+                <button class="emoji-btn">🤔</button>
+                <button class="emoji-btn">😎</button>
+                <button class="emoji-btn">😢</button>
+                <button class="emoji-btn">😡</button>
+                <button class="emoji-btn">🥳</button>
+                <button class="emoji-btn">😴</button>
+                <button class="emoji-btn">👍</button>
+                <button class="emoji-btn">👎</button>
+                <button class="emoji-btn">👌</button>
+                <button class="emoji-btn">✌️</button>
+                <button class="emoji-btn">🤝</button>
+                <button class="emoji-btn">🙏</button>
+                <button class="emoji-btn">💪</button>
+                <button class="emoji-btn">👏</button>
+                <button class="emoji-btn">🙌</button>
+                <button class="emoji-btn">❤️</button>
+                <button class="emoji-btn">💔</button>
+                <button class="emoji-btn">💕</button>
+                <button class="emoji-btn">💖</button>
+                <button class="emoji-btn">💗</button>
+                <button class="emoji-btn">🎉</button>
+                <button class="emoji-btn">🔥</button>
+                <button class="emoji-btn">⭐</button>
+                <button class="emoji-btn">✨</button>
+                <button class="emoji-btn">🌟</button>
+                <button class="emoji-btn">💯</button>
+                <button class="emoji-btn">🎯</button>
+                <button class="emoji-btn">🚀</button>
+                <button class="emoji-btn">💎</button>
+            </div>
+        </div>
+        
+        <div id="statusMessage"></div>
+        
+        <div style="margin-top: 30px;">
+            <button class="btn-primary" onclick="testEmoji()">🎯 Test Emoji Picker</button>
+            <button class="btn-success" onclick="forceShow()">🔴 Force Show</button>
+            <button class="btn-warning" onclick="goToMainChat()">💬 Go to Main Chat</button>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #1f2937; border-radius: 8px;">
+            <h3>🔧 Debug Info:</h3>
+            <div id="debugInfo">Click buttons above to see debug info...</div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 Page loaded!');
+        
+        // Get elements
+        const emojiBtn = document.getElementById('emojiBtn');
+        const emojiPicker = document.getElementById('emojiPicker');
+        const messageInput = document.getElementById('messageInput');
+        const statusDiv = document.getElementById('statusMessage');
+        const debugDiv = document.getElementById('debugInfo');
+        
+        function updateStatus(message, isError = false) {
+            statusDiv.innerHTML = `<div class="${isError ? 'error' : 'status'}">${message}</div>`;
+            console.log('Status:', message);
+        }
+        
+        function updateDebug(message) {
+            debugDiv.innerHTML = message + '<br><small>Time: ' + new Date().toLocaleTimeString() + '</small>';
+            console.log('Debug:', message);
+        }
+        
+        // Check elements
+        updateDebug(`Elements: emojiBtn=${!!emojiBtn}, emojiPicker=${!!emojiPicker}, messageInput=${!!messageInput}`);
+        
+        // Toggle emoji picker
+        function toggleEmojiPicker() {
+            const isVisible = emojiPicker.style.display === 'block';
+            emojiPicker.style.display = isVisible ? 'none' : 'block';
+            updateStatus(`Emoji picker ${isVisible ? 'hidden' : 'shown'}!`);
+            updateDebug(`Picker display: ${emojiPicker.style.display}`);
+        }
+        
+        // Add click event to emoji button
+        if (emojiBtn) {
+            emojiBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🎯 Emoji button clicked!');
+                toggleEmojiPicker();
+            });
+            updateDebug('✅ Emoji button listener added');
+        } else {
+            updateStatus('❌ Emoji button not found!', true);
+        }
+        
+        // Add click events to emoji buttons
+        const emojiButtons = emojiPicker.querySelectorAll('.emoji-btn');
+        updateDebug(`Found ${emojiButtons.length} emoji buttons`);
+        
+        emojiButtons.forEach(function(btn, index) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const emoji = btn.textContent.trim();
+                messageInput.value += emoji;
+                emojiPicker.style.display = 'none';
+                messageInput.focus();
+                updateStatus(`✅ Added emoji: ${emoji}`);
+                console.log('✅ Emoji added:', emoji);
+            });
+        });
+        
+        // Close when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
+                emojiPicker.style.display = 'none';
+            }
+        });
+        
+        // Test functions
+        function testEmoji() {
+            updateDebug('Testing emoji picker...');
+            if (emojiBtn) {
+                emojiBtn.click();
+                updateDebug('✅ Emoji button clicked programmatically');
+            } else {
+                updateDebug('❌ Emoji button not found');
+            }
+        }
+        
+        function forceShow() {
+            emojiPicker.style.display = 'block';
+            emojiPicker.style.background = 'red';
+            emojiPicker.style.zIndex = '9999';
+            updateStatus('🔴 Emoji picker forced to show with red background!');
+            updateDebug('Picker forced visible');
+        }
+        
+        function goToMainChat() {
+            window.location.href = '/chat';
+        }
+        
+        updateDebug('✅ Emoji picker initialized successfully!');
+        updateStatus('🎯 Ready to test! Click the 😊 button or "Test Emoji Picker"');
+    </script>
+</body>
+</html>

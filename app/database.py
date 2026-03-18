@@ -69,6 +69,31 @@ def delete_message(db, message_id: int):
         db.refresh(message)
     return message
 
+def clear_all_messages(db, room_id: int = None):
+    """Clear all messages, optionally filtered by room_id"""
+    query = db.query(Message)
+    if room_id is not None:
+        query = query.filter(Message.room_id == room_id)
+    
+    deleted_count = query.count()
+    query.delete()
+    db.commit()
+    return deleted_count
+
+def delete_room(db, room_id: int):
+    """Delete a room and all its messages"""
+    from .models import Room
+    
+    room = db.query(Room).filter(Room.id == room_id).first()
+    if room:
+        # Delete all messages in the room first
+        db.query(Message).filter(Message.room_id == room_id).delete()
+        # Delete the room
+        db.delete(room)
+        db.commit()
+        return True
+    return False
+
 # Room operations
 def create_room(db, name: str, description: str = None):
     room = Room(name=name, description=description)

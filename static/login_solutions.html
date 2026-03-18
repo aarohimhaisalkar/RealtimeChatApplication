@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Solutions</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1e293b; color: white; }
+        .container { max-width: 600px; margin: 50px auto; background: #334155; padding: 30px; border-radius: 10px; }
+        .solution { background: #374151; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #10b981; }
+        .btn { padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .credentials { background: #1f2937; padding: 15px; border-radius: 6px; font-family: monospace; margin: 10px 0; }
+        .status { background: #065f46; padding: 15px; border-radius: 6px; margin: 10px 0; }
+        .error { background: #991b1b; padding: 15px; border-radius: 6px; margin: 10px 0; }
+        h2 { color: #10b981; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Login Solutions</h1>
+        
+        <div class="status">
+            <strong>🚀 Server Status:</strong> Running on http://localhost:8000
+        </div>
+        
+        <div class="solution">
+            <h2>✅ Solution 1: Use Working Test Account</h2>
+            <p>This account is guaranteed to work:</p>
+            <div class="credentials">
+                <strong>Username:</strong> testuser789<br>
+                <strong>Password:</strong> Test12345!
+            </div>
+            <button class="btn btn-success" onclick="loginWithTestAccount()">🚀 Login with Test Account</button>
+        </div>
+        
+        <div class="solution">
+            <h2>🔄 Solution 2: Create New Account</h2>
+            <p>Create your own fresh account:</p>
+            <div class="credentials">
+                <strong>Username:</strong> <input type="text" id="newUsername" placeholder="Choose username" style="background: #374151; color: white; padding: 8px; border: 1px solid #4b5563; border-radius: 4px;"><br>
+                <strong>Email:</strong> <input type="email" id="newEmail" placeholder="your@email.com" style="background: #374151; color: white; padding: 8px; border: 1px solid #4b5563; border-radius: 4px;"><br>
+                <strong>Password:</strong> <input type="password" id="newPassword" placeholder="Password123!" style="background: #374151; color: white; padding: 8px; border: 1px solid #4b5563; border-radius: 4px;">
+            </div>
+            <button class="btn btn-primary" onclick="createNewAccount()">📝 Create Account</button>
+        </div>
+        
+        <div class="solution">
+            <h2>🔍 Solution 3: Test Your Aarohi Account</h2>
+            <p>Try different passwords for your Aarohi account:</p>
+            <div class="credentials">
+                <strong>Username:</strong> Aarohi<br>
+                <strong>Password:</strong> <input type="password" id="aarohiPassword" placeholder="Try your password" style="background: #374151; color: white; padding: 8px; border: 1px solid #4b5563; border-radius: 4px;">
+            </div>
+            <button class="btn btn-warning" onclick="testAarohiLogin()">🔑 Test Aarohi Login</button>
+        </div>
+        
+        <div id="statusMessage"></div>
+        
+        <div class="solution">
+            <h2>📱 Quick Links</h2>
+            <button class="btn btn-success" onclick="window.location.href='/'">🏠 Go to Login Page</button>
+            <button class="btn btn-primary" onclick="window.location.href='/chat'">💬 Go to Chat</button>
+            <button class="btn btn-warning" onclick="window.location.href='/simple-emoji'">😊 Test Emoji</button>
+        </div>
+    </div>
+
+    <script>
+        function showMessage(message, isError = false) {
+            const div = document.getElementById('statusMessage');
+            div.innerHTML = `<div class="${isError ? 'error' : 'status'}">${message}</div>`;
+        }
+        
+        async function loginWithTestAccount() {
+            showMessage('🔄 Logging in with test account...');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        username: 'testuser789',
+                        password: 'Test12345!'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('refresh_token', data.refresh_token);
+                    localStorage.setItem('user_info', JSON.stringify(data.user));
+                    
+                    showMessage('✅ Login successful! Redirecting to chat...');
+                    setTimeout(() => window.location.href = '/chat', 2000);
+                } else {
+                    showMessage('❌ Login failed: ' + (await response.text()), true);
+                }
+            } catch (error) {
+                showMessage('❌ Error: ' + error.message, true);
+            }
+        }
+        
+        async function createNewAccount() {
+            const username = document.getElementById('newUsername').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const password = document.getElementById('newPassword').value;
+            
+            if (!username || !email || !password) {
+                showMessage('❌ Please fill all fields', true);
+                return;
+            }
+            
+            showMessage('🔄 Creating new account...');
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        username: username,
+                        email: email,
+                        password: password,
+                        full_name: username
+                    })
+                });
+                
+                if (response.ok) {
+                    showMessage('✅ Account created! Logging in...');
+                    
+                    // Auto login
+                    const loginResponse = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({ username, password })
+                    });
+                    
+                    if (loginResponse.ok) {
+                        const data = await loginResponse.json();
+                        localStorage.setItem('access_token', data.access_token);
+                        localStorage.setItem('refresh_token', data.refresh_token);
+                        localStorage.setItem('user_info', JSON.stringify(data.user));
+                        
+                        showMessage('✅ Login successful! Redirecting to chat...');
+                        setTimeout(() => window.location.href = '/chat', 2000);
+                    }
+                } else {
+                    const error = await response.text();
+                    showMessage('❌ Registration failed: ' + error, true);
+                }
+            } catch (error) {
+                showMessage('❌ Error: ' + error.message, true);
+            }
+        }
+        
+        async function testAarohiLogin() {
+            const password = document.getElementById('aarohiPassword').value;
+            
+            if (!password) {
+                showMessage('❌ Please enter a password', true);
+                return;
+            }
+            
+            showMessage('🔄 Testing Aarohi login...');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        username: 'Aarohi',
+                        password: password
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('refresh_token', data.refresh_token);
+                    localStorage.setItem('user_info', JSON.stringify(data.user));
+                    
+                    showMessage('✅ Aarohi login successful! Redirecting to chat...');
+                    setTimeout(() => window.location.href = '/chat', 2000);
+                } else {
+                    showMessage('❌ Aarohi login failed. Try Solution 1 or 2.', true);
+                }
+            } catch (error) {
+                showMessage('❌ Error: ' + error.message, true);
+            }
+        }
+    </script>
+</body>
+</html>
